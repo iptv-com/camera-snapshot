@@ -1,0 +1,27 @@
+name: Gerador de Snapshot
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Roda a cada 15 minutos
+  workflow_dispatch:      # Permite rodar manualmente para testar
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Capturar Frame do m3u8
+        run: |
+          # O comando mágico que transforma vídeo em JPEG
+          ffmpeg -i "http://cameras.interaviation.com.br/camera02/interaviation2.m3u8" -frames:v 1 -y snapshot.jpg
+          
+      - name: Enviar para o Repositório
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add snapshot.jpg
+          git commit -m "Atualizando snapshot: $(date)" || echo "Sem mudanças"
+          git push
